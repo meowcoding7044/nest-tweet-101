@@ -8,6 +8,7 @@ import {
   InternalServerErrorException,
   Logger,
   RequestTimeoutException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { Repository } from 'typeorm';
@@ -21,6 +22,7 @@ import { UserAlreadyExistsException } from 'src/customExceptions/user-already-ex
 import { PaginationProvider } from 'src/common/pagination/pagination.provider';
 import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.dto';
 import { Paginated } from 'src/common/pagination/pagination.interface';
+import { HashingProvider } from 'src/auth/provider/hashing.provider';
 
 @Injectable()
 export class UsersService {
@@ -30,6 +32,8 @@ export class UsersService {
     @InjectRepository(Profile) private profileRepository: Repository<Profile>,
     private readonly configService: ConfigService,
     private readonly paginationProvider: PaginationProvider,
+    @Inject(forwardRef(() => HashingProvider))
+    private readonly hashingProvider: HashingProvider,
   ) {}
 
   public async getUsers(
@@ -80,7 +84,10 @@ export class UsersService {
         throw new UserAlreadyExistsException('email', userDto.email);
       }
       //create user Object
-      let user = this.userRepository.create(userDto);
+      let user = this.userRepository.create({
+        ...userDto,
+        password: await this.hashingProvider.hashPassword(userDto.password),
+      });
 
       //set the profile
       //user.profile = profile;
@@ -129,6 +136,23 @@ export class UsersService {
             ' was not found in users table.',
         },
       );
+    }
+    return user;
+  }
+  public async findUserByUserName(username: string) {
+    let user: User | null = null;
+
+    try {
+      user = await this.userRepository.findOneBy({
+        username: username,
+      });
+    } catch (error) {
+      throw new RequestTimeoutException(error, {
+        description: 'User with given username could not be found!',
+      });
+    }
+    if (!user) {
+      throw new UnauthorizedException('User does not exist!');
     }
     return user;
   }
