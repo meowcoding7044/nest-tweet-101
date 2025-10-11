@@ -1,8 +1,11 @@
 import {
+  BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
   Param,
   ParseIntPipe,
+  RequestTimeoutException,
 } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { Tweet } from './tweet.entity';
@@ -14,6 +17,7 @@ import { UpdateTweetDto } from './dto/update-tweet.dto';
 import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.dto';
 import { PaginationProvider } from 'src/common/pagination/pagination.provider';
 import { Paginated } from 'src/common/pagination/pagination.interface';
+import { ActiveUserType } from 'src/auth/interfaces/active-user-type.interface';
 
 @Injectable()
 export class TweetService {
@@ -44,20 +48,36 @@ export class TweetService {
       { user: { id: userId } },
     );
   }
-  public async CreateTweet(createTweetDto: CreateTweetDto) {
-    let user = await this.userService.FindUserById(createTweetDto.userId);
-    if (!user) return;
+  public async CreateTweet(createTweetDto: CreateTweetDto, userId: number) {
+    let user;
+    let hashtags: any = undefined;
+    try {
+      user = await this.userService.FindUserById(userId);
+      if (!user) return;
 
-    let hashtags = await this.hashtagService.findHashtags(
-      createTweetDto.hashtags!!,
-    );
+      if (createTweetDto.hashtags) {
+        hashtags = await this.hashtagService.findHashtags(
+          createTweetDto.hashtags!!,
+        );
+      }
+    } catch (error) {
+      throw new RequestTimeoutException();
+    }
+    if (createTweetDto.hashtags?.length !== hashtags?.length) {
+      throw new BadRequestException();
+    }
+
     let tweet = await this.tweetRepository.create({
       ...createTweetDto,
       user,
       hashtags,
     });
 
-    return await this.tweetRepository.save(tweet);
+    try {
+      return await this.tweetRepository.save(tweet);
+    } catch (error) {
+      throw new ConflictException(error);
+    }
   }
 
   public async UpdateTweet(updateTweetDto: UpdateTweetDto) {
