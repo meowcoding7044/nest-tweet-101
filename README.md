@@ -1,5 +1,5 @@
 #Clean Architecture + Domain-Driven Design (DDD)
-
+```
 src/
  ┣ core/                              # 🔹 ชั้นธุรกิจหลัก (domain + use cases)
  ┃ ┣ entities/
@@ -71,7 +71,7 @@ src/
  ┃ ┗ env.validation.ts
  ┣ main.ts
  ┗ app.module.ts
-
+```
 
 ### nest g resource auth --no-spec
 ### npm install --save @nestjs/typeorm typeorm
