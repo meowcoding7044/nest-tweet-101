@@ -1,36 +1,33 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
-import { TweetModule } from './tweet/tweet.module';
-import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { TweetModule } from './modules/tweet/tweet.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './users/user.entity';
-import { ProfileModule } from './profile/profile.module';
-import { Profile } from './profile/profile.entity';
-import { HashtagModule } from './hashtag/hashtag.module';
+import { User } from './infrastructure/database/entities/user.entity';
+import { ProfileModule } from './modules/profile/profile.module';
+import { Profile } from './infrastructure/database/entities/profile.entity';
+import { HashtagModule } from './modules/hashtag/hashtag.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PaginationProvider } from './common/pagination/pagination.provider';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import envValidation from './config/env.validation';
-import authConfig from 'src/auth/config/auth.config';
+import authConfig from 'src/config/auth.config';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthorizeGuard } from 'src/auth/guards/authorize.guard';
+import { AuthorizeGuard } from 'src/modules/auth/guards/authorize.guard';
 
 const ENV = process.env.NODE_ENV;
 
 @Module({
   imports: [
-    UsersModule,
-    TweetModule,
-    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV ? '.env' : `.env.${ENV.trim()}`,
-      load: [appConfig, databaseConfig],
+      load: [appConfig, authConfig, databaseConfig],
       validationSchema: envValidation,
     }),
     TypeOrmModule.forRootAsync({
@@ -48,6 +45,9 @@ const ENV = process.env.NODE_ENV;
         database: configService.get('database.name'),
       }),
     }),
+    UsersModule,
+    TweetModule,
+    AuthModule,
     ProfileModule,
     HashtagModule,
     ConfigModule.forFeature(authConfig),
