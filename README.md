@@ -1,4 +1,5 @@
-#Clean Architecture + Domain-Driven Design (DDD)
+# (DEV)
+## Clean Architecture + Domain-Driven Design (DDD)
 ```
 src/
  ┣ core/                              # 🔹 ชั้นธุรกิจหลัก (domain + use cases)
@@ -73,8 +74,10 @@ src/
  ┗ app.module.ts
 ```
 
+```
 ### nest g resource auth --no-spec
 ### npm install --save @nestjs/typeorm typeorm
 ### npx nest g provider ./common/pagination --no-spec
 ### nest g pr ./auth/provider/hashing.provider --flat --no-spec
 ### ``
+```
