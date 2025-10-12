@@ -1,6 +1,13 @@
 import { truncate } from 'fs';
-import { User } from 'src/infrastructure/database/entities/user.entity';
-import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import { UserEntity } from 'src/infrastructure/database/entities/user.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Profile {
@@ -46,7 +53,7 @@ export class Profile {
   })
   profileImage: string;
 
-  @OneToOne(()=>User,(user)=>user.profile,{onDelete:"CASCADE"})
+  @OneToOne(() => UserEntity, (user) => user.profile, { onDelete: 'CASCADE' })
   @JoinColumn()
-  user:User
+  user: UserEntity;
 }

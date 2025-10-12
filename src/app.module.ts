@@ -6,7 +6,7 @@ import { TweetModule } from './modules/tweet/tweet.module';
 import { AuthModule } from './modules/auth/auth.module';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './infrastructure/database/entities/user.entity';
+import { UserEntity } from './infrastructure/database/entities/user.entity';
 import { ProfileModule } from './modules/profile/profile.module';
 import { Profile } from './infrastructure/database/entities/profile.entity';
 import { HashtagModule } from './modules/hashtag/hashtag.module';

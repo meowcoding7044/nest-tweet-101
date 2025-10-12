@@ -1,5 +1,5 @@
 import { Hashtag } from 'src/infrastructure/database/entities/hashtag.entity';
-import { User } from 'src/infrastructure/database/entities/user.entity';
+import { UserEntity } from 'src/infrastructure/database/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -36,8 +36,8 @@ export class Tweet {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.tweets, { eager: true })
-  user: User;
+  @ManyToOne(() => UserEntity, (user) => user.tweets, { eager: true })
+  user: UserEntity;
 
   @ManyToMany(() => Hashtag, (hashtag) => hashtag.tweets,{ eager: true })
   @JoinTable()

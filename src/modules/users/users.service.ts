@@ -1,6 +1,4 @@
 import {
-  BadRequestException,
-  forwardRef,
   HttpException,
   HttpStatus,
   Inject,
@@ -10,112 +8,54 @@ import {
   RequestTimeoutException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthService } from 'src/modules/auth/auth.service';
-import { Repository } from 'typeorm';
-import { User } from '../../infrastructure/database/entities/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { CreateUserDto } from './dtos/create-user.dto';
-import { Profile } from 'src/infrastructure/database/entities/profile.entity';
+import { UserEntity } from '../../infrastructure/database/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-import { table } from 'console';
-import { UserAlreadyExistsException } from 'src/common/customExceptions/user-already-exists.excepion';
 import { PaginationProvider } from 'src/common/pagination/pagination.provider';
 import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.dto';
 import { Paginated } from 'src/common/pagination/pagination.interface';
-import { HashingProvider } from 'src/modules/auth/provider/hashing.provider';
+import { UsersRepository } from 'src/infrastructure/database/repositories/users.repository';
+import { BcryptHashProvider } from '../../infrastructure/providers/hash/bcrypt.provider';
+import { CreateUserUseCase } from 'src/core/use-cases/create-user.usecase';
+import { UserModel } from 'src/core/entities/user.model';
+import { CreateUserModel } from 'src/core/entities/create-user.model';
+import { GetUsersUseCase } from 'src/core/use-cases/get-users.usecase';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
-  constructor(
-    @InjectRepository(User) private userRepository: Repository<User>,
-    @InjectRepository(Profile) private profileRepository: Repository<Profile>,
-    private readonly configService: ConfigService,
-    private readonly paginationProvider: PaginationProvider,
-    @Inject(forwardRef(() => HashingProvider))
-    private readonly hashingProvider: HashingProvider,
-  ) {}
+  private readonly createUserUC: CreateUserUseCase;
+  private readonly getUsersUC: GetUsersUseCase;
 
-  public async getUsers(
-    paginationQueryDto: PaginationQueryDto,
-  ): Promise<Paginated<User>> {
-    const environment = this.configService.get<string>('ENV_MODE');
-    this.logger.debug(`Environment mode: ${environment}`);
-    try {
-      return await this.paginationProvider.paginateQuery(
-        paginationQueryDto,
-        this.userRepository,
-        {},
-        ['profile'],
-      );
-    } catch (err: any) {
-      if (err.code === 'ECONNREFUSED') {
-        this.logger.error('Database connection failed', err.stack);
-        throw new RequestTimeoutException(
-          'An error has occured. please try again later.',
-          {
-            description: 'Could not connect to database.',
-          },
-        );
-      }
-      this.logger.error('Unexpected error in getUsers()', err.stack);
-      throw new InternalServerErrorException(
-        'Unexpected server error occurred.',
-      );
-    }
+  constructor(
+    private usersRepo: UsersRepository,
+    private hashProvider: BcryptHashProvider,
+    // private readonly configService: ConfigService,
+    // private readonly paginationProvider: PaginationProvider,
+  ) {
+    this.createUserUC = new CreateUserUseCase(
+      this.usersRepo,
+      this.hashProvider,
+    );
+    this.getUsersUC = new GetUsersUseCase(this.usersRepo);
   }
 
-  async createUser(userDto: CreateUserDto) {
-    try {
-      userDto.profile = userDto.profile ?? {};
-      const existingUserWithUsername = await this.userRepository.findOne({
-        where: { username: userDto.username },
-      });
-      if (existingUserWithUsername) {
-        throw new UserAlreadyExistsException('username', userDto.username);
-      }
-      const existingUserWithEmail = await this.userRepository.findOne({
-        where: { email: userDto.email },
-      });
-      if (existingUserWithEmail) {
-        throw new UserAlreadyExistsException('email', userDto.email);
-      }
-      let user = this.userRepository.create({
-        ...userDto,
-        password: await this.hashingProvider.hashPassword(userDto.password),
-      });
+  async getUsers(
+    paginationQueryDto: PaginationQueryDto,
+  ): Promise<Paginated<UserModel>> {
+    return this.getUsersUC.execute(paginationQueryDto);
+  }
 
-      //set the profile
-      //user.profile = profile;
-
-      //save the user object
-      return await this.userRepository.save(user);
-    } catch (err) {
-      if (err.code === 'ECONNREFUSED') {
-        throw new RequestTimeoutException(
-          'An error has occured. please try again later.',
-          {
-            description: 'Could not connect to database.',
-          },
-        );
-      }
-      throw err;
-      // if (err.code === '23505') {
-      //   throw new BadRequestException(
-      //     'There is some dulicate value for the user in Database.',
-      //   );
-      // }
-    }
+  createUser(dto: CreateUserModel) {
+    return this.createUserUC.execute(dto);
   }
 
   async deleteUser(id: number) {
-    await this.userRepository.delete(id);
-
+    await this.usersRepo.deleteUser(id);
     return { delete: true };
   }
 
   async FindUserById(id: number) {
-    const user = await this.userRepository.findOneBy({ id });
+    const user = await this.usersRepo.findById(id);
     if (!user) {
       throw new HttpException(
         {
@@ -135,12 +75,9 @@ export class UsersService {
     return user;
   }
   async findUserByUserName(username: string) {
-    let user: User | null = null;
-
+    let user: UserModel | null = null;
     try {
-      user = await this.userRepository.findOneBy({
-        username: username,
-      });
+      user = await this.usersRepo.findByUsername(username);
     } catch (error) {
       throw new RequestTimeoutException(error, {
         description: 'User with given username could not be found!',

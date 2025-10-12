@@ -2,18 +2,18 @@
 services:
   db:
     image: postgres:15
-    container_name: pg-database
+    container_name: pg-database-v1
     environment:
-      DB_USERNAME: kiw          
-      DB_PASSWORD: 1111  
-      DB_NAME: nestDb       
+      POSTGRES_USER: kiw          
+      POSTGRES_PASSWORD: 1111  
+      POSTGRES_DB: nestDb       
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"          
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_PASSWORD}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5

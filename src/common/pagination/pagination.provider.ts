@@ -1,28 +1,29 @@
-import { Injectable, Inject, BadRequestException } from "@nestjs/common";
-import { REQUEST } from "@nestjs/core";
-import type { Request } from "express";
-import { PaginationQueryDto } from "./dto/pagination-query.dto";
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+import type { Request } from 'express';
+import { PaginationQueryDto } from './dto/pagination-query.dto';
 import {
   ObjectLiteral,
   Repository,
   FindOptionsWhere,
   FindManyOptions,
-} from "typeorm";
-import { Paginated } from "./pagination.interface";
+} from 'typeorm';
+import { Paginated } from './pagination.interface';
+import { IPaginationProvider } from 'src/core/interfaces/pagination-provider.interface';
 
 @Injectable()
-export class PaginationProvider {
+export class PaginationProvider implements IPaginationProvider {
   constructor(@Inject(REQUEST) private readonly request: Request) {}
   public async paginateQuery<T extends ObjectLiteral>(
     paginationQueryDto: PaginationQueryDto,
     repository: Repository<T>,
     where?: FindOptionsWhere<T>,
-    relations?: string[]
+    relations?: string[],
   ): Promise<Paginated<T>> {
     const { page = 1, limit = 10 } = paginationQueryDto;
     if (limit <= 0 || page <= 0)
       throw new BadRequestException(
-        "Pagination parameters must be positive numbers."
+        'Pagination parameters must be positive numbers.',
       );
 
     const findOptions: FindManyOptions<T> = {

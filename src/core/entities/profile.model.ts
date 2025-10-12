@@ -11,7 +11,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class CreateProfileDto {
+export class ProfileModel {
   @IsString({ message: 'First Name should be a string value.' })
   @IsOptional()
   @MinLength(3, {

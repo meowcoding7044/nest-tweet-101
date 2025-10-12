@@ -1,5 +1,6 @@
 import {
   IsBoolean,
+  IsDate,
   IsEmail,
   IsNotEmpty,
   IsNumber,
@@ -9,9 +10,12 @@ import {
   MinDate,
   MinLength,
 } from 'class-validator';
-import { CreateProfileDto } from 'src/modules/profile/dto/create-profile.dto';
+import { ProfileModel } from './profile.model';
 
-export class CreateUserDto {
+export class UserModel {
+  @IsOptional()
+  id?:number;
+
   @IsEmail()
   @IsNotEmpty()
   @MaxLength(100)
@@ -28,5 +32,13 @@ export class CreateUserDto {
   password: string;
 
   @IsOptional()
-  profile?: CreateProfileDto;
+  profile?: ProfileModel;
+
+  @IsOptional()
+  @IsDate()
+  createdAt?:Date
+
+  @IsOptional()
+  @IsDate()
+  updatedAt?:Date
 }
