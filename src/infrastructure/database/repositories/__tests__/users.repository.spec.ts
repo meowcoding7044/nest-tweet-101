@@ -1,8 +1,8 @@
 import { UsersRepository } from '../users.repository';
 import { Repository } from 'typeorm';
 import { UserEntity } from '../../entities/user.entity';
-import { PaginationProvider } from 'src/common/pagination/pagination.provider';
-import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.dto';
+import { PaginationProvider } from 'src/infrastructure/providers/pagination/pagination.provider';
+import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
 
 describe('UsersRepository', () => {
   let repo: UsersRepository;

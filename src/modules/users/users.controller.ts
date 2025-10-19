@@ -1,21 +1,14 @@
 import {
   Controller,
   Get,
-  Post,
   Param,
   Query,
   ParseIntPipe,
-  DefaultValuePipe,
-  ValidationPipe,
-  Body,
-  ParseBoolPipe,
-  Patch,
   Delete,
-  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.dto';
-import { AuthorizeGuard } from 'src/modules/auth/guards/authorize.guard';
+import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
+import { AuthorizeGuard } from 'src/common/guards/authorize.guard';
 
 @Controller('users')
 // @UseGuards(AuthorizeGuard)
@@ -29,7 +22,7 @@ export class UsersController {
 
   @Get(':id')
   getUserById(@Param('id') id: number) {
-    return this.usersService.FindUserById(id);
+    return this.usersService.findUserById(id);
   }
 
   @Delete(':id')

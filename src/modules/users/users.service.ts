@@ -3,89 +3,66 @@ import {
   HttpStatus,
   Inject,
   Injectable,
-  InternalServerErrorException,
   Logger,
   RequestTimeoutException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserEntity } from '../../infrastructure/database/entities/user.entity';
-import { ConfigService } from '@nestjs/config';
-import { PaginationProvider } from 'src/common/pagination/pagination.provider';
-import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.dto';
-import { Paginated } from 'src/common/pagination/pagination.interface';
+
+import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
+import { Paginated } from 'src/core/interfaces/pagination.interface';
 import { UsersRepository } from 'src/infrastructure/database/repositories/users.repository';
 import { BcryptHashProvider } from '../../infrastructure/providers/hash/bcrypt.provider';
-import { CreateUserUseCase } from 'src/core/use-cases/create-user.usecase';
-import { UserModel } from 'src/core/entities/user.model';
-import { CreateUserModel } from 'src/core/entities/create-user.model';
-import { GetUsersUseCase } from 'src/core/use-cases/get-users.usecase';
+import { CreateUserUseCase } from 'src/core/use-cases/user/create-user.usecase';
+import { UserModel } from 'src/core/entities/user/user.model';
+import { CreateUserDto } from 'src/modules/users/dtos/create-user.dto';
+import { GetUsersUseCase } from 'src/core/use-cases/user/get-users.usecase';
+import { USERS_REPOSITORY } from 'src/common/constants/tokens';
+import type { IUsersRepository } from 'src/core/domain/user/users-repository.interface';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
-  private readonly createUserUC: CreateUserUseCase;
-  private readonly getUsersUC: GetUsersUseCase;
 
   constructor(
-    private usersRepo: UsersRepository,
-    private hashProvider: BcryptHashProvider,
-    // private readonly configService: ConfigService,
-    // private readonly paginationProvider: PaginationProvider,
-  ) {
-    this.createUserUC = new CreateUserUseCase(
-      this.usersRepo,
-      this.hashProvider,
-    );
-    this.getUsersUC = new GetUsersUseCase(this.usersRepo);
-  }
+    private readonly createUserUC: CreateUserUseCase,
+    private readonly getUsersUC: GetUsersUseCase,
+    @Inject(USERS_REPOSITORY)
+    private readonly usersRepo: IUsersRepository,
+  ) {}
 
   async getUsers(
     paginationQueryDto: PaginationQueryDto,
-  ): Promise<Paginated<UserModel>> {
-    return this.getUsersUC.execute(paginationQueryDto);
+  ): Promise<Paginated<UserModel | null>> {
+    return await this.getUsersUC.execute(paginationQueryDto);
   }
 
-  createUser(dto: CreateUserModel) {
+  async createUser(dto: CreateUserDto) {
+    console.log("createUser service : ",dto)
     return this.createUserUC.execute(dto);
   }
 
   async deleteUser(id: number) {
     await this.usersRepo.deleteUser(id);
-    return { delete: true };
+    return { deleted: true };
   }
 
-  async FindUserById(id: number) {
+  async findUserById(id: number) {
     const user = await this.usersRepo.findById(id);
     if (!user) {
       throw new HttpException(
         {
           status: HttpStatus.NOT_FOUND,
-          error: 'The user with ID ' + id + ' was not found.',
-          table: 'user',
+          message: `User with ID ${id} not found.`,
         },
         HttpStatus.NOT_FOUND,
-        {
-          description:
-            'The excepion occured because a user with ID ' +
-            id +
-            ' was not found in users table.',
-        },
       );
     }
     return user;
   }
-  async findUserByUserName(username: string) {
-    let user: UserModel | null = null;
-    try {
-      user = await this.usersRepo.findByUsername(username);
-    } catch (error) {
-      throw new RequestTimeoutException(error, {
-        description: 'User with given username could not be found!',
-      });
-    }
-    if (!user) {
-      throw new UnauthorizedException('User does not exist!');
-    }
+
+  async findUserByUsername(username: string) {
+    const user = await this.usersRepo.findByUsername(username);
+    if (!user) throw new UnauthorizedException('User does not exist!');
     return user;
   }
 }

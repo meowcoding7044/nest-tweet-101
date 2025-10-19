@@ -1,8 +1,8 @@
-import { GetUsersUseCase } from '../get-users.usecase';
-import { IUsersRepository } from '../../interfaces/users-repository.interface';
-import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.dto';
-import { Paginated } from 'src/common/pagination/pagination.interface';
-import { UserModel } from '../../entities/user.model';
+import { GetUsersUseCase } from '../user/get-users.usecase';
+import { IUsersRepository } from '../../domain/user/users-repository.interface';
+import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
+import { Paginated } from 'src/core/interfaces/pagination.interface';
+import { UserModel } from '../../../modules/users/dtos/user.dto';
 
 describe('GetUsersUseCase', () => {
   let useCase: GetUsersUseCase;

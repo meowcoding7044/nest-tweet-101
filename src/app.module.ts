@@ -6,19 +6,19 @@ import { TweetModule } from './modules/tweet/tweet.module';
 import { AuthModule } from './modules/auth/auth.module';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserEntity } from './infrastructure/database/entities/user.entity';
+import { User } from './infrastructure/database/entities/user.entity';
 import { ProfileModule } from './modules/profile/profile.module';
 import { Profile } from './infrastructure/database/entities/profile.entity';
 import { HashtagModule } from './modules/hashtag/hashtag.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { PaginationProvider } from './common/pagination/pagination.provider';
+import { PaginationProvider } from './infrastructure/providers/pagination/pagination.provider';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import envValidation from './config/env.validation';
 import authConfig from 'src/config/auth.config';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthorizeGuard } from 'src/modules/auth/guards/authorize.guard';
+import { AuthorizeGuard } from 'src/common/guards/authorize.guard';
 
 const ENV = process.env.NODE_ENV;
 

@@ -4,11 +4,13 @@ import { IHashProvider } from '../../../core/interfaces/hashing-provider.interfa
 
 @Injectable()
 export class BcryptHashProvider implements IHashProvider {
-  async hashPassword(password: string): Promise<string> {
-    const salt = await bcrypt.genSalt();
-    return bcrypt.hash(password, salt);
+  private readonly rounds = 10;
+
+  async hash(plain: string): Promise<string> {
+    return bcrypt.hash(plain, this.rounds);
   }
-  async comparePassword(plain: string, hash: string): Promise<boolean> {
-    return bcrypt.compare(plain, hash);
+
+  async compare(plain: string, hashed: string): Promise<boolean> {
+    return bcrypt.compare(plain, hashed);
   }
 }

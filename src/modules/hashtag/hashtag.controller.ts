@@ -2,18 +2,25 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { HashtagService } from './hashtag.service';
-import { CreateHashtagDto } from './dto/create-hashtag.dto';
+import { CreateHashtagDto } from './dtos/create-hashtag.dto';
+import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
 
 @Controller('hashtag')
 export class HashtagController {
   constructor(private readonly hashtagService: HashtagService) {}
 
-  @Post()
+  @Get('')
+  getHashtags(@Query() pageQueryDto: PaginationQueryDto) {
+    return this.hashtagService.getHashtags(pageQueryDto)
+  }
+  @Post('')
   createNewHashtag(@Body() dto: CreateHashtagDto) {
     return this.hashtagService.createHashtag(dto);
   }

@@ -11,12 +11,12 @@ import {
   Req,
 } from '@nestjs/common';
 import { TweetService } from './tweet.service';
-import { CreateTweetDto } from './dto/create-tweet.dto';
-import { UpdateTweetDto } from './dto/update-tweet.dto';
-import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.dto';
-import { GetTweetQueryDto } from './dto/get-tweet-query.dto';
+import { CreateTweetDto } from './dtos/create-tweet.dto';
+//import { UpdateTweetDto } from './dto/update-tweet.dto';
+import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
+import { GetTweetQueryDto } from './dtos/get-tweet-query.dto';
 import { userInfo } from 'os';
-import { ActiveUser } from 'src/modules/auth/decorators/active-user.decorator';
+import { ActiveUser } from 'src/common/decorators/active-user.decorator';
 
 @Controller('tweet')
 export class TweetController {
@@ -32,13 +32,13 @@ export class TweetController {
 
   @Post()
   createTweet(@Body() dto: CreateTweetDto, @ActiveUser('sub') userId) {
-    return this.tweetService.createTweet(dto, userId);
+    return this.tweetService.createTweet(userId, dto);
   }
 
-  @Patch()
-  updateTweet(@Body() dto: UpdateTweetDto) {
-    return this.tweetService.updateTweet(dto);
-  }
+  // @Patch()
+  // updateTweet(@Body() dto: UpdateTweetDto) {
+  //   //return this.tweetService.updateTweet(dto);
+  // }
 
   @Delete(':id')
   deleteTweet(@Param('id', ParseIntPipe) id: number) {

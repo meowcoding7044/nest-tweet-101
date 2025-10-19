@@ -1,5 +1,5 @@
 import { truncate } from 'fs';
-import { UserEntity } from 'src/infrastructure/database/entities/user.entity';
+import { User } from 'src/infrastructure/database/entities/user.entity';
 import {
   Column,
   Entity,
@@ -53,7 +53,7 @@ export class Profile {
   })
   profileImage: string;
 
-  @OneToOne(() => UserEntity, (user) => user.profile, { onDelete: 'CASCADE' })
+  @OneToOne(() => User, (user) => user.profile, { onDelete: 'CASCADE' })
   @JoinColumn()
-  user: UserEntity;
+  user: User;
 }

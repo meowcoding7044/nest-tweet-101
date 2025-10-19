@@ -1,7 +1,7 @@
-import { CreateUserUseCase } from '../create-user.usecase';
-import { IUsersRepository } from '../../interfaces/users-repository.interface';
+import { CreateUserUseCase } from '../user/create-user.usecase';
+import { IUsersRepository } from '../../domain/user/users-repository.interface';
 import { IHashProvider } from 'src/core/interfaces/hashing-provider.interface';
-import { UserModel } from '../../entities/user.model';
+import { UserModel } from '../../../modules/users/dtos/user.dto';
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;

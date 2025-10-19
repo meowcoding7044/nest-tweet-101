@@ -1,75 +1,61 @@
 import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from '../entities/user.entity';
-import { IUsersRepository } from 'src/core/interfaces/users-repository.interface';
-import { UserModel } from 'src/core/entities/user.model';
-import { PaginationProvider } from 'src/common/pagination/pagination.provider';
-import { PaginationQueryDto } from 'src/common/pagination/dto/pagination-query.dto';
-import { Paginated } from 'src/common/pagination/pagination.interface';
+import { User } from '../entities/user.entity';
+import { IUsersRepository } from 'src/core/domain/user/users-repository.interface';
+import { UserModel } from 'src/core/entities/user/user.model';
+import { PaginationProvider } from 'src/infrastructure/providers/pagination/pagination.provider';
+import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
+import { Paginated } from 'src/core/interfaces/pagination.interface';
+import { UserMapper } from '../mappers/user.mapper';
 
 @Injectable()
 export class UsersRepository implements IUsersRepository {
   constructor(
-    @InjectRepository(UserEntity)
-    private readonly repo: Repository<UserEntity>,
-    private readonly paginationProvider: PaginationProvider,
+    @InjectRepository(User)
+    private readonly repo: Repository<User>,
+    private readonly pagination: PaginationProvider,
   ) {}
 
-  private toModel(entity: UserEntity): UserModel {
-    if (!entity) return null as any;
-    return {
-      id: entity.id,
-      username: entity.username,
-      email: entity.email,
-      password: entity.password,
-      profile: entity.profile ? { bio: entity.profile.bio } : undefined,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-    };
-  }
 
   async findById(id: number): Promise<UserModel | null> {
-    const e = await this.repo.findOne({ where: { id } });
-    return e ? this.toModel(e) : null;
+    const e = await this.repo.findOne({
+      where: { id },
+      relations: ['profile'],
+    });
+    return e ? UserMapper.toModel(e) : null;
   }
-
   async findByUsername(username: string): Promise<UserModel | null> {
     const e = await this.repo.findOne({ where: { username } });
-    return e ? this.toModel(e) : null;
+    return e ? UserMapper.toModel(e) : null;
   }
-
   async findByEmail(email: string): Promise<UserModel | null> {
     const e = await this.repo.findOne({ where: { email } });
-    return e ? this.toModel(e) : null;
+    return e ? UserMapper.toModel(e) : null;
   }
 
   async createUser(user: Partial<UserModel>): Promise<UserModel> {
-    const entity = this.repo.create(user as UserEntity);
+    const entity = this.repo.create(user as unknown as User);
     const saved = await this.repo.save(entity);
-    return this.toModel(saved);
-  }
-  async deleteUser(id: number): Promise<any> {
-    return await this.repo.delete(id);
+    return UserMapper.toModel(saved)!;
   }
 
+  async deleteUser(id: number): Promise<{ deleted: boolean }> {
+    const res = await this.repo.delete(id);
+    return { deleted: (res.affected || 0) > 0 };
+  }
   async findAllPaginated(
-    pagination: PaginationQueryDto,
-  ): Promise<Paginated<UserModel>> {
-    const result = await this.paginationProvider.paginateQuery(
-      pagination,
+    paginationDto: PaginationQueryDto,
+  ): Promise<Paginated<UserModel | null>> {
+    const paged = await this.pagination.paginateQuery(
+      paginationDto,
       this.repo,
       {},
       ['profile'],
     );
     return {
-      ...result,
-      data: result.data.map((entity) => this.toDomain(entity)),
+      ...paged,
+      data: paged.data.map((e: any) => UserMapper.toModel(e as User)!),
     };
-  }
-
-   private toDomain(entity: UserEntity): UserModel {
-    const { id, username, email, password, profile } = entity;
-    return { id, username, email, password, profile };
   }
 }

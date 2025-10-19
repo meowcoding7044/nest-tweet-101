@@ -72,6 +72,15 @@ src/
  ┃ ┗ env.validation.ts
  ┣ main.ts
  ┗ app.module.ts
+
+
+ | Layer              | หน้าที่                                            |
+| ------------------ | -------------------------------------------------- |
+| **Domain**         | กำหนด Model และ Interface                          |
+| **Use Case**       | รวม Pure Business Logic (ไม่ขึ้นกับ framework)          |
+| **Infrastructure** | เชื่อมต่อของจริง (TypeORM, Bcrypt, JWT)            |
+| **Modules (Nest)** | Controller / DI / Mapping ระหว่างโลกจริงกับ domain |
+domain → usecase → repository → service → controller
 ```
 
 ```
